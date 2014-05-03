@@ -19,6 +19,7 @@ AsyncTask::DoneStatus rotatingCube(GenericAsyncTask* task, void* data) {
     
     return AsyncTask::DS_cont;
 }
+//just a comment to see ho git works
 
 int main(int argc, char *argv[]) {
     // Open a new window framework and set the title
