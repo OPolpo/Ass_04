@@ -22,7 +22,8 @@ AsyncTask::DoneStatus rotatingCube(GenericAsyncTask* task, void* data) {
 
 
 void moveForward(const Event * theEvent, void * data){
-   cout<<"forward" <<endl;
+	cout<<"forward" <<endl;
+	camera.set_pos(1, 1, 0);
 }
 void moveBackward(const Event * theEvent, void * data){
    cout<<"backward" <<endl;
