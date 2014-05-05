@@ -22,17 +22,20 @@ AsyncTask::DoneStatus rotatingCube(GenericAsyncTask* task, void* data) {
 
 
 void moveForward(const Event * theEvent, void * data){
-	cout<<"forward" <<endl;
-	camera.set_pos(1, 1, 0);
+	cout << "forward" <<endl;
+	camera.set_pos(camera.get_pos()[0], camera.get_pos()[1]+0.1, camera.get_pos()[2]);
 }
 void moveBackward(const Event * theEvent, void * data){
-   cout<<"backward" <<endl;
+	cout<<"backward" <<endl;
+	camera.set_pos(camera.get_pos()[0], camera.get_pos()[1]-0.1, camera.get_pos()[2]);
 }
 void moveLeft(const Event * theEvent, void * data){
-   cout<<"left" <<endl;
+	cout<<"left" <<endl;
+	camera.set_pos(camera.get_pos()[0]-0.1, camera.get_pos()[1], camera.get_pos()[2]);
 }
 void moveRight(const Event * theEvent, void * data){
-   cout<<"right" <<endl;
+	cout<<"right" <<endl;
+	camera.set_pos(camera.get_pos()[0]+0.1, camera.get_pos()[1], camera.get_pos()[2]);
 }
 void Exit(const Event * theEvent, void * data){
 	exit(0);
