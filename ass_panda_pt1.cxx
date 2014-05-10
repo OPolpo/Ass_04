@@ -9,7 +9,7 @@ PandaFramework framework;
 PT(AsyncTaskManager) taskMgr = AsyncTaskManager::get_global_ptr();
 PT(ClockObject) globalClock = ClockObject::get_global_clock();
 NodePath camera;
-NodePath room, table, mantis;
+NodePath ground, table, mantis, sky;
 
 void moveForward(const Event * theEvent, void * data){
 	cout << "forward" <<endl;
@@ -33,12 +33,17 @@ void Exit(const Event * theEvent, void * data){
 
 void modelSetup(WindowFramework *window){
 
+	sky = window->load_model(framework.get_models(),"models/stars/stars");
+	sky.reparent_to(window->get_render());
+	sky.set_scale(1);
+	sky.set_pos(0, 0, -1);
+	sky.set_hpr(0, 0, 0);
 
-	room = window->load_model(framework.get_models(),"models/endroom/EndRoom");
-	room.reparent_to(window->get_render());
-	room.set_scale(0.1);
-	room.set_pos(0, 0, 0);
-	room.set_hpr(0, 0, 0);
+	ground = window->load_model(framework.get_models(),"models/moonsurface/moonsurface");
+	ground.reparent_to(window->get_render());
+	ground.set_scale(0.02);
+	ground.set_pos(0, 0, 0);
+	ground.set_hpr(0, 0, 0);
 
 	table = window->load_model(framework.get_models(),"models/dining_table_2/DiningTable2");
 	table.reparent_to(window->get_render());
