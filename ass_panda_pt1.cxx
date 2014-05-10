@@ -9,7 +9,7 @@ PandaFramework framework;
 PT(AsyncTaskManager) taskMgr = AsyncTaskManager::get_global_ptr();
 PT(ClockObject) globalClock = ClockObject::get_global_clock();
 NodePath camera;
-NodePath ground, table, mantis, sky;
+NodePath ground, table, mantis, astronaut, sky;
 
 void moveForward(const Event * theEvent, void * data){
 	cout << "forward" <<endl;
@@ -56,6 +56,12 @@ void modelSetup(WindowFramework *window){
 	mantis.set_scale(2);
 	mantis.set_pos(1.5, 0, 2);
 	mantis.set_hpr(170, 0, 0);
+
+	astronaut = window->load_model(framework.get_models(),"models/astronaut/astronaut");
+	astronaut.reparent_to(table);
+	astronaut.set_scale(2);
+	astronaut.set_pos(1.5, 0, -2);
+	astronaut.set_hpr(170, 0, 0);
 
 
 	
