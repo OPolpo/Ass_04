@@ -57,6 +57,34 @@ void Exit(const Event * theEvent, void * data){
 	exit(0);
 }
 
+
+void init_ball(){
+  double radius = 0.1;
+	LVecBase3f speed(0 , 30 , 0);
+
+  BulletSphereShape* sphere_shape = new BulletSphereShape( radius ) ;
+  BulletRigidBodyNode* sphere_rigid_node = new BulletRigidBodyNode("Sphere");
+
+  sphere_rigid_node->set_mass(0.02);
+  sphere_rigid_node->add_shape(sphere_shape);
+ 
+  physics_world->attach_rigid_body(sphere_rigid_node);
+
+  NodePath np_sphere = window->get_render().attach_new_node(sphere_rigid_node);
+  np_sphere.set_pos(camera.get_pos()[0], camera.get_pos()[1]+5, camera.get_pos()[2]);
+ 
+  NodePath np_sphere_model = window->load_model(framework.get_models(), "smiley");
+  np_sphere_model.reparent_to(np_sphere);
+	np_sphere_model.set_scale(radius);
+	sphere_rigid_node->set_linear_velocity(speed);
+}
+
+
+void ballLaunch(const Event * theEvent, void * data){
+	cout<<"baaaaaaaaaaaaaaaaaaaaaaaaaaall" <<endl;
+	init_ball();
+}
+
 void modelSetup(WindowFramework *window){
 
 	sky = window->load_model(framework.get_models(),"models/sky/blue_sky_sphere");
@@ -93,28 +121,26 @@ void modelSetup(WindowFramework *window){
 	
 }
 
+void init_table(){
+	LVecBase3f normal(0.5 , 0.5 , 0.5);
 
-void init_ball()
-{
-  double radius = 0.5;
+  BulletBoxShape* box_shape = new BulletBoxShape(normal);
+  BulletRigidBodyNode* box_rigid_node = new BulletRigidBodyNode("Box");
 
-  BulletSphereShape* sphere_shape = new BulletSphereShape( radius ) ;
-  BulletRigidBodyNode* sphere_rigid_node = new BulletRigidBodyNode("Sphere");
+  box_rigid_node->set_mass(1.0);
+  box_rigid_node->add_shape(box_shape);
 
-  sphere_rigid_node->set_mass(1.0);
-  sphere_rigid_node->add_shape(sphere_shape);
+  physics_world->attach_rigid_body(box_rigid_node);
  
-  physics_world->attach_rigid_body(sphere_rigid_node);
+  NodePath np_box = window->get_render().attach_new_node(box_rigid_node);
+  np_box.set_pos_hpr(0, 0, 1.5, 0, 0, 0);
+    
+  table.reparent_to(np_box);
 
-  NodePath np_sphere = window->get_render().attach_new_node(sphere_rigid_node);
-  np_sphere.set_pos(-2, 0, 2);
- 
-  NodePath np_sphere_model = window->load_model(framework.get_models(), "smiley");
-  np_sphere_model.reparent_to(np_sphere);
 }
 
-void init_cube()
-{ 
+
+void init_cube(){ 
   LVecBase3f normal(0.5 , 0.5 , 0.5);
 
   BulletBoxShape* box_shape = new BulletBoxShape(normal);
@@ -126,8 +152,7 @@ void init_cube()
   physics_world->attach_rigid_body(box_rigid_node);
  
   NodePath np_box = window->get_render().attach_new_node(box_rigid_node);
-  np_box.set_pos(0, 0, 2);
-  np_box.set_pos_hpr(2, 0, 2, 45, 45, 45);
+  np_box.set_pos_hpr(0, 0, 7, 45, 45, 45);
     
   NodePath np_box_model = window->load_model(framework.get_models(), "models/box");
   np_box_model.set_pos(-1.0, -1.0, -1.0);
@@ -135,8 +160,7 @@ void init_cube()
   np_box_model.reparent_to(np_box);
 }
 
-void init_floor()
-{  
+void init_floor(){  
   LVecBase3f normal (0 , 0 , 1) ;
   double d = 1;
 
@@ -144,12 +168,12 @@ void init_floor()
   BulletRigidBodyNode * floor_rigid_node = new BulletRigidBodyNode("Ground");
   floor_rigid_node -> add_shape (floor_shape);
   NodePath np_ground = window -> get_render().attach_new_node(floor_rigid_node);
-  np_ground.set_pos(0, 0, -2);
+  np_ground.set_pos(0, 30, 0);
   physics_world -> attach_rigid_body(floor_rigid_node);
   
 
   CardMaker* cm = new CardMaker("ground");
-  cm->set_frame(-20, 20, -20, 20);
+  cm->set_frame(-60, 60, -60, 60);
     
   NodePath np_ground_tex = window->get_render().attach_new_node(cm->generate());
   np_ground_tex.reparent_to(np_ground);
@@ -161,7 +185,7 @@ void init_floor()
   tex = texture_pool->load_texture("floor1.jpg");
   
   np_ground_tex.set_p(270);
-  np_ground_tex.set_tex_scale(ts, 3, 3);
+  np_ground_tex.set_tex_scale(ts, 9, 9);
   np_ground.set_texture(ts, tex);
 }
 
@@ -172,12 +196,11 @@ void inputBinding(){
 	framework.define_key("arrow_down", "camera backward", moveBackward, 0);
 	framework.define_key("arrow_left", "camera left", moveLeft, 0);
 	framework.define_key("arrow_right", "camera right", moveRight, 0);
+	framework.define_key("space", "ball launch", ballLaunch, 0);
 }
 
  
-int main(int argc, char *argv[]) 
-{
-    NodePath camera;
+int main(int argc, char *argv[]) {
 
     framework.open_framework(argc, argv);
     framework.set_window_title("Panda3D - Assignment");
@@ -185,7 +208,7 @@ int main(int argc, char *argv[])
     window = framework.open_window();
  
     camera = window->get_camera_group();
-	camera.set_pos(0,-20,5);
+	camera.set_pos(0,-20, 6);
 	camera.set_hpr(0, -5, 0);
  
     physics_world = new BulletWorld () ;
@@ -197,8 +220,9 @@ int main(int argc, char *argv[])
 	modelSetup(window);
 
     init_floor();
-    init_ball();
+    //init_ball();
     init_cube();
+	init_table();
 
     PT(GenericAsyncTask) task;
     task = new GenericAsyncTask("Scene update" , &update_scene , (void *) NULL );
