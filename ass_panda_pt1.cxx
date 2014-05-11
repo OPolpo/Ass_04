@@ -35,8 +35,14 @@ AsyncTask::DoneStatus update_scene(GenericAsyncTask* task, void* data){
 }
 
 
-
-
+void moveUp(const Event * theEvent, void * data){
+	cout << "Up" <<endl;
+	camera.set_pos(camera.get_pos()[0], camera.get_pos()[1], camera.get_pos()[2]+0.1);
+}
+void moveDown(const Event * theEvent, void * data){
+	cout<<"Down" <<endl;
+	camera.set_pos(camera.get_pos()[0], camera.get_pos()[1], camera.get_pos()[2]-0.1);
+}
 void moveForward(const Event * theEvent, void * data){
 	cout << "forward" <<endl;
 	camera.set_pos(camera.get_pos()[0], camera.get_pos()[1]+0.1, camera.get_pos()[2]);
@@ -60,7 +66,7 @@ void Exit(const Event * theEvent, void * data){
 
 void init_ball(){
   double radius = 0.1;
-	LVecBase3f speed(0 , 30 , 0);
+	LVecBase3f speed(00 , 30 , 0);
 
   BulletSphereShape* sphere_shape = new BulletSphereShape( radius ) ;
   BulletRigidBodyNode* sphere_rigid_node = new BulletRigidBodyNode("Sphere");
@@ -71,7 +77,7 @@ void init_ball(){
   physics_world->attach_rigid_body(sphere_rigid_node);
 
   NodePath np_sphere = window->get_render().attach_new_node(sphere_rigid_node);
-  np_sphere.set_pos(camera.get_pos()[0], camera.get_pos()[1]+5, camera.get_pos()[2]);
+  np_sphere.set_pos(camera.get_pos()[0], camera.get_pos()[1], camera.get_pos()[2]);
  
   NodePath np_sphere_model = window->load_model(framework.get_models(), "smiley");
   np_sphere_model.reparent_to(np_sphere);
@@ -93,18 +99,6 @@ void modelSetup(WindowFramework *window){
 	sky.set_pos(0, 0, -1);
 	sky.set_hpr(0, 0, 0);
 
-	//ground = window->load_model(framework.get_models(),"models/moonsurface/moonsurface");
-	//ground.reparent_to(window->get_render());
-	//ground.set_scale(0.02);
-	//ground.set_pos(0, 0, 0);
-	//ground.set_hpr(0, 0, 0);
-
-	table = window->load_model(framework.get_models(),"models/dining_table_2/DiningTable2");
-	table.reparent_to(window->get_render());
-	table.set_scale(1);
-	table.set_pos(0, 0, 0);
-	table.set_hpr(0, 0, 0);
-
 	mantis = window->load_model(framework.get_models(),"models/mantis/mantis");
 	mantis.reparent_to(table);
 	mantis.set_scale(2);
@@ -121,44 +115,67 @@ void modelSetup(WindowFramework *window){
 	
 }
 
+
+void init_astronaut(){
+
+	BulletBoxShape *shape1 = new BulletBoxShape(LVecBase3f(0.2,0.1,1.0));
+	BulletRigidBodyNode* astronaut_rigid_node = new BulletRigidBodyNode("Box");
+
+	astronaut_rigid_node->set_mass(0.1);
+
+	astronaut_rigid_node->add_shape(shape1, TransformState::make_pos(LPoint3f(0.0,0.0,1.0)));
+
+	physics_world->attach_rigid_body(astronaut_rigid_node);
+ 
+	NodePath np_astronaut = window->get_render().attach_new_node(astronaut_rigid_node);
+	np_astronaut.set_pos_hpr(0, 0, 4, 180, 0, 0);
+
+	astronaut = window->load_model(framework.get_models(),"models/astronaut/astronaut");
+	astronaut.reparent_to(window->get_render());
+	astronaut.set_scale(0.5);
+	astronaut.set_pos(-0, 0, 0);
+	astronaut.set_hpr(0, 0, 0);
+
+	astronaut.reparent_to(np_astronaut);
+	
+}
+
 void init_table(){
-	LVecBase3f normal(0.5 , 0.5 , 0.5);
+	LVecBase3f normal(5 , 3 , 2);
 
-  BulletBoxShape* box_shape = new BulletBoxShape(normal);
-  BulletRigidBodyNode* box_rigid_node = new BulletRigidBodyNode("Box");
+	double h = 1.5;
 
-  box_rigid_node->set_mass(1.0);
-  box_rigid_node->add_shape(box_shape);
+	BulletBoxShape *shape1 = new BulletBoxShape(LVecBase3f(10.0,5.0,0.2));
+	BulletBoxShape *shape2 = new BulletBoxShape(LVecBase3f(0.2,0.2,h));
+	BulletBoxShape *shape3 = new BulletBoxShape(LVecBase3f(0.2,0.2,h));
+	BulletBoxShape *shape4 = new BulletBoxShape(LVecBase3f(0.2,0.2,h));
+	BulletBoxShape *shape5 = new BulletBoxShape(LVecBase3f(0.2,0.2,h));
+	BulletRigidBodyNode* table_rigid_node = new BulletRigidBodyNode("Box");
 
-  physics_world->attach_rigid_body(box_rigid_node);
+	table_rigid_node->set_mass(1.0);
+
+	table_rigid_node->add_shape(shape1, TransformState::make_pos(LPoint3f(0.0,0.0,2*(h-0.2))));
+	table_rigid_node->add_shape(shape2, TransformState::make_pos(LPoint3f(-3.8,-1.2,h)));
+	table_rigid_node->add_shape(shape3, TransformState::make_pos(LPoint3f(-3.8,1.2,h)));
+	table_rigid_node->add_shape(shape4, TransformState::make_pos(LPoint3f(3.8,-1.2,h)));
+	table_rigid_node->add_shape(shape5, TransformState::make_pos(LPoint3f(3.8,1.2,h)));
+
+	physics_world->attach_rigid_body(table_rigid_node);
  
-  NodePath np_box = window->get_render().attach_new_node(box_rigid_node);
-  np_box.set_pos_hpr(0, 0, 1.5, 0, 0, 0);
-    
-  table.reparent_to(np_box);
+	NodePath np_table = window->get_render().attach_new_node(table_rigid_node);
+	np_table.set_pos_hpr(0, 0, 0, 0, 0, 0);
 
+
+	table = window->load_model(framework.get_models(),"models/dining_table_2/DiningTable2");
+	table.reparent_to(window->get_render());
+	table.set_scale(1);
+	table.set_pos(0, 0, 0);
+	table.set_hpr(0, 0, 0);
+    
+  table.reparent_to(np_table);
+	
 }
 
-
-void init_cube(){ 
-  LVecBase3f normal(0.5 , 0.5 , 0.5);
-
-  BulletBoxShape* box_shape = new BulletBoxShape(normal);
-  BulletRigidBodyNode* box_rigid_node = new BulletRigidBodyNode("Box");
-
-  box_rigid_node->set_mass(1.0);
-  box_rigid_node->add_shape(box_shape);
-
-  physics_world->attach_rigid_body(box_rigid_node);
- 
-  NodePath np_box = window->get_render().attach_new_node(box_rigid_node);
-  np_box.set_pos_hpr(0, 0, 7, 45, 45, 45);
-    
-  NodePath np_box_model = window->load_model(framework.get_models(), "models/box");
-  np_box_model.set_pos(-1.0, -1.0, -1.0);
-  np_box_model.set_scale(2);
-  np_box_model.reparent_to(np_box);
-}
 
 void init_floor(){  
   LVecBase3f normal (0 , 0 , 1) ;
@@ -166,7 +183,7 @@ void init_floor(){
 
   BulletPlaneShape * floor_shape = new BulletPlaneShape (normal, d);
   BulletRigidBodyNode * floor_rigid_node = new BulletRigidBodyNode("Ground");
-  floor_rigid_node -> add_shape (floor_shape);
+  floor_rigid_node -> add_shape (floor_shape,TransformState::make_pos(LPoint3f(0.0,0.0,-1.0)));
   NodePath np_ground = window -> get_render().attach_new_node(floor_rigid_node);
   np_ground.set_pos(0, 30, 0);
   physics_world -> attach_rigid_body(floor_rigid_node);
@@ -192,6 +209,8 @@ void init_floor(){
 
 void inputBinding(){
 	framework.define_key("escape", "exit", Exit, 0);
+	framework.define_key("c", "camera up", moveUp, 0);
+	framework.define_key("v", "camera down", moveDown, 0);
 	framework.define_key("arrow_up", "camera forward", moveForward, 0);
 	framework.define_key("arrow_down", "camera backward", moveBackward, 0);
 	framework.define_key("arrow_left", "camera left", moveLeft, 0);
@@ -208,8 +227,8 @@ int main(int argc, char *argv[]) {
     window = framework.open_window();
  
     camera = window->get_camera_group();
-	camera.set_pos(0,-20, 6);
-	camera.set_hpr(0, -5, 0);
+	camera.set_pos(-0,-20, 0);
+	camera.set_hpr(-0, -0, 0);
  
     physics_world = new BulletWorld () ;
     physics_world->set_gravity(0 , 0 , -9.8) ;
@@ -221,7 +240,7 @@ int main(int argc, char *argv[]) {
 
     init_floor();
     //init_ball();
-    init_cube();
+	init_astronaut();
 	init_table();
 
     PT(GenericAsyncTask) task;
