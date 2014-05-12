@@ -34,7 +34,10 @@ AsyncTask::DoneStatus update_scene(GenericAsyncTask* task, void* data){
 	return	AsyncTask::DS_cont;
 }
 
-
+void locate(const Event * theEvent, void * data){
+	cout << "locate" <<endl;
+	//camera.set_pos(camera.get_pos()[0], camera.get_pos()[1], camera.get_pos()[2]+0.1);
+}
 void moveUp(const Event * theEvent, void * data){
 	cout << "Up" <<endl;
 	camera.set_pos(camera.get_pos()[0], camera.get_pos()[1], camera.get_pos()[2]+0.1);
@@ -66,7 +69,7 @@ void Exit(const Event * theEvent, void * data){
 
 void init_ball(){
   double radius = 0.1;
-	LVecBase3f speed(00 , 30 , 0);
+	LVecBase3f speed(00 , 40 , 2);
 
   BulletSphereShape* sphere_shape = new BulletSphereShape( radius ) ;
   BulletRigidBodyNode* sphere_rigid_node = new BulletRigidBodyNode("Sphere");
@@ -118,22 +121,23 @@ void modelSetup(WindowFramework *window){
 
 void init_astronaut(){
 
-	BulletBoxShape *shape1 = new BulletBoxShape(LVecBase3f(0.2,0.1,1.0));
+	BulletBoxShape *shape1 = new BulletBoxShape(LVecBase3f(1.0,1.0,4.0));
 	BulletRigidBodyNode* astronaut_rigid_node = new BulletRigidBodyNode("Box");
 
 	astronaut_rigid_node->set_mass(0.1);
 
-	astronaut_rigid_node->add_shape(shape1, TransformState::make_pos(LPoint3f(0.0,0.0,1.0)));
+	astronaut_rigid_node->add_shape(shape1, TransformState::make_pos(LPoint3f(0.0,0.0,0.0)));
 
 	physics_world->attach_rigid_body(astronaut_rigid_node);
  
 	NodePath np_astronaut = window->get_render().attach_new_node(astronaut_rigid_node);
-	np_astronaut.set_pos_hpr(0, 0, 4, 180, 0, 0);
+	np_astronaut.set_pos_hpr(0, -5, 6, 180, 0, 0);
 
 	astronaut = window->load_model(framework.get_models(),"models/astronaut/astronaut");
+	//astronaut = window->load_model(framework.get_models(),"models/misc/rgbCube");	
 	astronaut.reparent_to(window->get_render());
-	astronaut.set_scale(0.5);
-	astronaut.set_pos(-0, 0, 0);
+	astronaut.set_scale(2.0);
+	astronaut.set_pos(-0, 0, -4);
 	astronaut.set_hpr(0, 0, 0);
 
 	astronaut.reparent_to(np_astronaut);
@@ -145,7 +149,7 @@ void init_table(){
 
 	double h = 1.5;
 
-	BulletBoxShape *shape1 = new BulletBoxShape(LVecBase3f(10.0,5.0,0.2));
+	BulletBoxShape *shape1 = new BulletBoxShape(LVecBase3f(5.0,2.5,0.2));
 	BulletBoxShape *shape2 = new BulletBoxShape(LVecBase3f(0.2,0.2,h));
 	BulletBoxShape *shape3 = new BulletBoxShape(LVecBase3f(0.2,0.2,h));
 	BulletBoxShape *shape4 = new BulletBoxShape(LVecBase3f(0.2,0.2,h));
@@ -211,6 +215,7 @@ void inputBinding(){
 	framework.define_key("escape", "exit", Exit, 0);
 	framework.define_key("c", "camera up", moveUp, 0);
 	framework.define_key("v", "camera down", moveDown, 0);
+	framework.define_key("l", "home locator", locate, 0);
 	framework.define_key("arrow_up", "camera forward", moveForward, 0);
 	framework.define_key("arrow_down", "camera backward", moveBackward, 0);
 	framework.define_key("arrow_left", "camera left", moveLeft, 0);
@@ -227,7 +232,7 @@ int main(int argc, char *argv[]) {
     window = framework.open_window();
  
     camera = window->get_camera_group();
-	camera.set_pos(-0,-20, 0);
+	camera.set_pos(-0,-10, 0);
 	camera.set_hpr(-0, -0, 0);
  
     physics_world = new BulletWorld () ;
