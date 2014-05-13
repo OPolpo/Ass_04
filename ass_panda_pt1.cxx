@@ -8,6 +8,8 @@
 #include "bulletPlaneShape.h"
 #include "bulletSphereShape.h"
 #include "bulletBoxShape.h"
+#include "bulletCylinderShape.h"
+#include "bulletConvexHullShape.h"
 #include "cardMaker.h"
 #include "texture.h"
 #include "texturePool.h"
@@ -75,22 +77,32 @@ void init_astronaut(){
 void init_table(){
 	LVecBase3f normal(5 , 3 , 2);
 
-	double h = 1.5;
+	double h = 1;
 
-	BulletBoxShape *shape1 = new BulletBoxShape(LVecBase3f(5.0,2.5,0.2));
-	BulletBoxShape *shape2 = new BulletBoxShape(LVecBase3f(0.2,0.2,h));
-	BulletBoxShape *shape3 = new BulletBoxShape(LVecBase3f(0.2,0.2,h));
-	BulletBoxShape *shape4 = new BulletBoxShape(LVecBase3f(0.2,0.2,h));
-	BulletBoxShape *shape5 = new BulletBoxShape(LVecBase3f(0.2,0.2,h));
+	//BulletBoxShape *shape1 = new BulletBoxShape(LVecBase3f(4.0*h,2.5*h,0.1*h));
+	BulletConvexHullShape *shape1 = new BulletConvexHullShape();
+	shape1->add_point(LPoint3f(3.65, 0, 0));//
+	shape1->add_point(LPoint3f(3.35, 0.9, 0));
+	shape1->add_point(LPoint3f(2.45, 1.75, 0));
+	shape1->add_point(LPoint3f(1.3, 2.3, 0));
+	shape1->add_point(LPoint3f(0, 2.4, 0));//
+	shape1->add_point(LPoint3f(-3.65, 0, 0));//
+	shape1->add_point(LPoint3f(0, -2.4, 0));//
+
+	
+	BulletBoxShape *shape2 = new BulletBoxShape(LVecBase3f(0.2*h,0.2*h,h));
+	BulletBoxShape *shape3 = new BulletBoxShape(LVecBase3f(0.2*h,0.2*h,h));
+	BulletBoxShape *shape4 = new BulletBoxShape(LVecBase3f(0.2*h,0.2*h,h));
+	BulletBoxShape *shape5 = new BulletBoxShape(LVecBase3f(0.2*h,0.2*h,h));
 	BulletRigidBodyNode* table_rigid_node = new BulletRigidBodyNode("Box");
 
 	table_rigid_node->set_mass(1.0);
 
-	table_rigid_node->add_shape(shape1, TransformState::make_pos(LPoint3f(0.0,0.0,2*(h-0.2))));
-	table_rigid_node->add_shape(shape2, TransformState::make_pos(LPoint3f(-3.8,-1.2,h)));
-	table_rigid_node->add_shape(shape3, TransformState::make_pos(LPoint3f(-3.8,1.2,h)));
-	table_rigid_node->add_shape(shape4, TransformState::make_pos(LPoint3f(3.8,-1.2,h)));
-	table_rigid_node->add_shape(shape5, TransformState::make_pos(LPoint3f(3.8,1.2,h)));
+	table_rigid_node->add_shape(shape1, TransformState::make_pos(LPoint3f(0.0,0.0,2*h+1)));
+	table_rigid_node->add_shape(shape2, TransformState::make_pos(LPoint3f(-2.8*h,-0.9*h,h)));
+	table_rigid_node->add_shape(shape3, TransformState::make_pos(LPoint3f(-2.8*h,0.9*h,h)));
+	table_rigid_node->add_shape(shape4, TransformState::make_pos(LPoint3f(2.8*h,-0.9*h,h)));
+	table_rigid_node->add_shape(shape5, TransformState::make_pos(LPoint3f(2.8*h,0.9*h,h)));
 
 	physics_world->attach_rigid_body(table_rigid_node);
  
@@ -100,7 +112,8 @@ void init_table(){
 
 	table = window->load_model(framework.get_models(),"models/dining_table_2/DiningTable2");
 	table.reparent_to(window->get_render());
-	table.set_scale(1);
+	table.set_scale(0.77);
+	//table.set_scale(0.01);
 	table.set_pos(0, 0, 0);
 	table.set_hpr(0, 0, 0);
     
@@ -180,7 +193,7 @@ void Exit(const Event * theEvent, void * data){
 
 void init_ball(){
   double radius = 0.1;
-	LVecBase3f speed(00 , 60 , 00);
+	LVecBase3f speed(00 , 0 , -20);
 	LVecBase3f ang_speed(10 , 0 , 0);
 
   BulletSphereShape* sphere_shape = new BulletSphereShape( radius ) ;
@@ -239,6 +252,34 @@ void inputBinding(){
 	framework.define_key("space", "ball launch", ballLaunch, 0);
 }
 
+void debugModeHandler(const Event *eventPtr, void *dataPtr)
+{
+    BulletDebugNode *debugNode = (BulletDebugNode *)dataPtr;
+    static bool show_bounding_boxes_value = false;
+    static bool show_constraints_value = false;
+    static bool show_normals_value = false;
+    static bool show_wireframe_value = false;
+    if(eventPtr->get_name() == "f1")
+    {
+        show_bounding_boxes_value = !show_bounding_boxes_value;
+        debugNode->show_bounding_boxes(show_bounding_boxes_value);
+    }
+    if(eventPtr->get_name() == "f2")
+    {
+        show_constraints_value = !show_constraints_value;
+        debugNode->show_constraints(show_constraints_value);
+    }
+    if(eventPtr->get_name() == "f3")
+    {
+        show_normals_value = !show_normals_value;
+        debugNode->show_normals(show_normals_value);
+    }
+    if(eventPtr->get_name() == "f4")
+    {
+        show_wireframe_value = !show_wireframe_value;
+        debugNode->show_wireframe(show_wireframe_value);
+    }
+}
  
 int main(int argc, char *argv[]) {
 
@@ -248,8 +289,8 @@ int main(int argc, char *argv[]) {
     window = framework.open_window();
  
     camera = window->get_camera_group();
-	camera.set_pos(-0,-10, 3);
-	camera.set_hpr(-0, -0, 0);
+	camera.set_pos(-0,-0, 23);
+	camera.set_hpr(-0, -90, 0);
  
     physics_world = new BulletWorld () ;
     physics_world->set_gravity(0 , 0 , -9.8) ;
@@ -279,6 +320,24 @@ int main(int argc, char *argv[]) {
 	a_light->set_color(LVecBase4f(0.2, 0.2, 0.2, 1));
 	NodePath alnp = window->get_render().attach_new_node(a_light);
 	window->get_render().set_light(alnp);
+
+	// debug node
+    PT(BulletDebugNode) bullet_dbg_node;
+    bullet_dbg_node = new BulletDebugNode("Debug");
+    bullet_dbg_node->show_bounding_boxes(false);
+    bullet_dbg_node->show_constraints(false);
+    bullet_dbg_node->show_normals(false);
+    bullet_dbg_node->show_wireframe(false);
+    NodePath np_dbg_node = window->get_render().attach_new_node(bullet_dbg_node);
+    np_dbg_node.show();
+    physics_world->set_debug_node(bullet_dbg_node);
+    // end debug node
+	
+	// debugger keys
+    framework.define_key("f1", "callChangeDebugMode", &debugModeHandler, (void *) bullet_dbg_node);
+    framework.define_key("f2", "callChangeDebugMode", &debugModeHandler, (void *) bullet_dbg_node);
+    framework.define_key("f3", "callChangeDebugMode", &debugModeHandler, (void *) bullet_dbg_node);
+    framework.define_key("f4", "callChangeDebugMode", &debugModeHandler, (void *) bullet_dbg_node);
 
     framework.main_loop();
     framework.close_framework();
