@@ -14,7 +14,10 @@
 #include "texture.h"
 #include "texturePool.h"
 #include "textureStage.h"
-
+#include "material.h"
+#include "audioManager.h"
+#include "audio.h"
+#include "audioSound.h"
 
 #include "ambientLight.h"
 #include "directionalLight.h"
@@ -27,7 +30,8 @@ WindowFramework *window;
 AsyncTaskManager *task_mgr = AsyncTaskManager::get_global_ptr();
 PT(ClockObject) globalClock = ClockObject::get_global_clock();
 NodePath camera;
-NodePath ground, table, mantis, astronaut, sky;
+NodePath ground, table, rolling_pin, lunch_box, astronaut, sky;
+
 
 
 BulletWorld *physics_world;
@@ -48,7 +52,7 @@ void init_astronaut(){
 	double height = 1;
 	double pos_x = 0;
 	double pos_y = 0;
-	double pos_z = 2;//the foot of the astronaut
+	double pos_z = 2.7;//the foot of the astronaut
 
 	
 	BulletBoxShape *shape1 = new BulletBoxShape(LVecBase3f(height*0.25,height*0.20,height*0.5));//legs
@@ -65,7 +69,7 @@ void init_astronaut(){
 	physics_world->attach_rigid_body(astronaut_rigid_node);
  
 	NodePath np_astronaut = window->get_render().attach_new_node(astronaut_rigid_node);
-	np_astronaut.set_pos_hpr(pos_x, pos_y , height + pos_z, 90, 0, 0);
+	np_astronaut.set_pos_hpr(pos_x, pos_y , height + pos_z, 180, 0, 0);
 
 	astronaut = window->load_model(framework.get_models(),"models/astronaut/astronaut");
 	astronaut.reparent_to(window->get_render());
@@ -78,10 +82,76 @@ void init_astronaut(){
 	
 }
 
+void init_rolling_pin(){
+	
+	double length = 2;
+	double pos_x = 3;
+	double pos_y = 0;
+	double pos_z = 2.5;
+
+	
+	BulletCylinderShape *shape1 = new BulletCylinderShape(0.1*length,length);
+	BulletRigidBodyNode* rolling_pin_rigid_node = new BulletRigidBodyNode("Box");
+
+	rolling_pin_rigid_node->set_mass(0.3);
+
+	rolling_pin_rigid_node->add_shape(shape1, TransformState::make_pos(LPoint3f(0.0,0.0,0.0)));
+
+
+	physics_world->attach_rigid_body(rolling_pin_rigid_node);
+ 
+	NodePath np_rolling_pin = window->get_render().attach_new_node(rolling_pin_rigid_node);
+	np_rolling_pin.set_pos_hpr(pos_x, pos_y , length + pos_z, 45, 90, 0);
+
+	rolling_pin = window->load_model(framework.get_models(),"models/rolling/RollingPin");
+	rolling_pin.reparent_to(window->get_render());
+	rolling_pin.set_scale(length);
+	rolling_pin.set_pos(0, 0, 0);
+	rolling_pin.set_hpr(0, 0, 90);
+
+	rolling_pin.reparent_to(np_rolling_pin);
+	rolling_pin_rigid_node->set_friction(0.6);
+	rolling_pin_rigid_node->set_anisotropic_friction(0.8);
+	
+}
+
+void init_lunch_box(){
+	
+	double length = 0.8;
+	double pos_x = -3;
+	double pos_y = 0;
+	double pos_z = 3.5;
+
+	
+	BulletBoxShape *shape1 = new BulletBoxShape(LVecBase3f(length*1.1,length*0.5,length*1.2));
+	BulletRigidBodyNode* lunch_box_rigid_node = new BulletRigidBodyNode("Box");
+
+	lunch_box_rigid_node->set_mass(0.3);
+
+	lunch_box_rigid_node->add_shape(shape1, TransformState::make_pos(LPoint3f(0.0,0.0,0.0)));
+
+
+	physics_world->attach_rigid_body(lunch_box_rigid_node);
+ 
+	NodePath np_lunch_box = window->get_render().attach_new_node(lunch_box_rigid_node);
+	np_lunch_box.set_pos_hpr(pos_x, pos_y , length + pos_z, 45, 0, 0);
+
+	lunch_box = window->load_model(framework.get_models(),"models/lunchBox/LunchBox");
+	lunch_box.reparent_to(window->get_render());
+	lunch_box.set_scale(length*3);
+	lunch_box.set_pos(0, 0, 0);
+	lunch_box.set_hpr(0, 0, 90);
+
+	lunch_box.reparent_to(np_lunch_box);
+	lunch_box_rigid_node->set_friction(0.6);
+	lunch_box_rigid_node->set_anisotropic_friction(0.8);
+	
+}
+
 void init_table(){
 	LVecBase3f normal(5 , 3 , 2);
 
-	double h = 1;
+	double h = 1.5;
 	double p1x =  3.65*h;
 	double p1y =  0.00;
 
@@ -98,8 +168,6 @@ void init_table(){
 	double p5y =  2.40*h;
 	
 
-
-	//BulletBoxShape *shape1 = new BulletBoxShape(LVecBase3f(4.0*h,2.5*h,0.1*h));
 	BulletConvexHullShape *shape1 = new BulletConvexHullShape();
 
 	double thickness = 0.1*h;
@@ -120,23 +188,22 @@ void init_table(){
 	shape1->add_point(LPoint3f(p3x, -p3y, thickness));
 	shape1->add_point(LPoint3f(p2x, -p2y, thickness));
 	
-	BulletConvexHullShape *shape11 = new BulletConvexHullShape();
-	shape11->add_point(LPoint3f(p1x, p1y, 0));//
-	shape11->add_point(LPoint3f(p2x, p2y, 0));
-	shape11->add_point(LPoint3f(p3x, p3y, 0));
-	shape11->add_point(LPoint3f(p4x, p4y, 0));
-	shape11->add_point(LPoint3f(p5x, p5y, 0));//
-	shape11->add_point(LPoint3f(-p4x, p4y, 0));
-	shape11->add_point(LPoint3f(-p3x, p3y, 0));
-	shape11->add_point(LPoint3f(-p2x, p2y, 0));
-	shape11->add_point(LPoint3f(-p1x, p1y, 0));//
-	shape11->add_point(LPoint3f(-p2x, -p2y, 0));
-	shape11->add_point(LPoint3f(-p3x, -p3y, 0));
-	shape11->add_point(LPoint3f(-p4x, -p4y, 0));
-	shape11->add_point(LPoint3f(-p5x, -p5y, 0));//
-	shape11->add_point(LPoint3f(p4x, -p4y, 0));
-	shape11->add_point(LPoint3f(p3x, -p3y, 0));
-	shape11->add_point(LPoint3f(p2x, -p2y, 0));
+	shape1->add_point(LPoint3f(p1x, p1y, 0));//
+	shape1->add_point(LPoint3f(p2x, p2y, 0));
+	shape1->add_point(LPoint3f(p3x, p3y, 0));
+	shape1->add_point(LPoint3f(p4x, p4y, 0));
+	shape1->add_point(LPoint3f(p5x, p5y, 0));//
+	shape1->add_point(LPoint3f(-p4x, p4y, 0));
+	shape1->add_point(LPoint3f(-p3x, p3y, 0));
+	shape1->add_point(LPoint3f(-p2x, p2y, 0));
+	shape1->add_point(LPoint3f(-p1x, p1y, 0));//
+	shape1->add_point(LPoint3f(-p2x, -p2y, 0));
+	shape1->add_point(LPoint3f(-p3x, -p3y, 0));
+	shape1->add_point(LPoint3f(-p4x, -p4y, 0));
+	shape1->add_point(LPoint3f(-p5x, -p5y, 0));//
+	shape1->add_point(LPoint3f(p4x, -p4y, 0));
+	shape1->add_point(LPoint3f(p3x, -p3y, 0));
+	shape1->add_point(LPoint3f(p2x, -p2y, 0));
 
 	BulletBoxShape *shape2 = new BulletBoxShape(LVecBase3f(0.2*h,0.2*h,h));
 	BulletBoxShape *shape3 = new BulletBoxShape(LVecBase3f(0.2*h,0.2*h,h));
@@ -147,7 +214,7 @@ void init_table(){
 	table_rigid_node->set_mass(1.0);
 
 	table_rigid_node->add_shape(shape1, TransformState::make_pos(LPoint3f(0.0,0.0,2*h)));
-	table_rigid_node->add_shape(shape11, TransformState::make_pos(LPoint3f(0.0,0.0,2*h)));
+	//table_rigid_node->add_shape(shape11, TransformState::make_pos(LPoint3f(0.0,0.0,2*h)));
 	table_rigid_node->add_shape(shape2, TransformState::make_pos(LPoint3f(-2.8*h,-0.9*h,h)));
 	table_rigid_node->add_shape(shape3, TransformState::make_pos(LPoint3f(-2.8*h,0.9*h,h)));
 	table_rigid_node->add_shape(shape4, TransformState::make_pos(LPoint3f(2.8*h,-0.9*h,h)));
@@ -161,12 +228,15 @@ void init_table(){
 
 	table = window->load_model(framework.get_models(),"models/dining_table_2/DiningTable2");
 	table.reparent_to(window->get_render());
-	table.set_scale(0.77);
+	table.set_scale(0.77*h);
 	//table.set_scale(0.01);
 	table.set_pos(0, 0, 0);
 	table.set_hpr(0, 0, 0);
     
   table.reparent_to(np_table);
+	PT(Material) table_material = new Material("table");
+	table_material->set_diffuse(LVecBase4(0.5,0.5,0.5,0.5));
+	table.set_material(table_material);
 	
 }
 
@@ -199,42 +269,26 @@ void init_floor(){
 	np_ground_tex.set_tex_scale(ts, 9, 9);
 	np_ground.set_texture(ts, tex);
 	floor_rigid_node->set_friction(0.4);
+
+	PT(Material) floor_material = new Material();
+	floor_material->set_diffuse(LVecBase4(1,1,1,1));
+	np_ground.set_material(floor_material);
+	
 }
 
 void locate_models(){
 	init_floor();
 	init_astronaut();
 	init_table();
+	init_rolling_pin();
+	init_lunch_box();
 }
 void locate(const Event * theEvent, void * data){
 	cout << "locate" <<endl;
 	locate_models();
 	//camera.set_pos(camera.get_pos()[0], camera.get_pos()[1], camera.get_pos()[2]+0.1);
 }
-void moveUp(const Event * theEvent, void * data){
-	cout << "Up" <<endl;
-	camera.set_pos(camera.get_pos()[0], camera.get_pos()[1], camera.get_pos()[2]+0.1);
-}
-void moveDown(const Event * theEvent, void * data){
-	cout<<"Down" <<endl;
-	camera.set_pos(camera.get_pos()[0], camera.get_pos()[1], camera.get_pos()[2]-0.1);
-}
-void moveForward(const Event * theEvent, void * data){
-	cout << "forward" <<endl;
-	camera.set_pos(camera.get_pos()[0], camera.get_pos()[1]+0.1, camera.get_pos()[2]);
-}
-void moveBackward(const Event * theEvent, void * data){
-	cout<<"backward" <<endl;
-	camera.set_pos(camera.get_pos()[0], camera.get_pos()[1]-0.1, camera.get_pos()[2]);
-}
-void moveLeft(const Event * theEvent, void * data){
-	cout<<"left" <<endl;
-	camera.set_pos(camera.get_pos()[0]-0.1, camera.get_pos()[1], camera.get_pos()[2]);
-}
-void moveRight(const Event * theEvent, void * data){
-	cout<<"right" <<endl;
-	camera.set_pos(camera.get_pos()[0]+0.1, camera.get_pos()[1], camera.get_pos()[2]);
-}
+
 void Exit(const Event * theEvent, void * data){
 	exit(0);
 }
@@ -265,10 +319,6 @@ void init_ball(){
 }
 
 
-void ballLaunch(const Event * theEvent, void * data){
-	cout<<"baaaaaaaaaaaaaaaaaaaaaaaaaaall" <<endl;
-	init_ball();
-}
 
 void modelSetup(WindowFramework *window){
 
@@ -277,28 +327,39 @@ void modelSetup(WindowFramework *window){
 	sky.set_scale(1);
 	sky.set_pos(0, 0, -1);
 	sky.set_hpr(0, 0, 0);
-
-	mantis = window->load_model(framework.get_models(),"models/mantis/mantis");
-	mantis.reparent_to(table);
-	mantis.set_scale(2);
-	mantis.set_pos(1.5, 0, 2);
-	mantis.set_hpr(170, 0, 0);
 	
 }
 
+void KeyboardHandler(const Event *eventPtr, void *dataPtr)
+{
+    if(eventPtr->get_name() == "arrow_up"){
+		camera.set_pos(camera.get_pos()[0], camera.get_pos()[1]+0.15, camera.get_pos()[2]);
+    }
+    if(eventPtr->get_name() == "arrow_down"){
+		camera.set_pos(camera.get_pos()[0], camera.get_pos()[1]-0.15, camera.get_pos()[2]);
+    }
+    if(eventPtr->get_name() == "arrow_left"){
+		camera.set_pos(camera.get_pos()[0]-0.15, camera.get_pos()[1], camera.get_pos()[2]);
+    }
+	if(eventPtr->get_name() == "arrow_right"){
+		camera.set_pos(camera.get_pos()[0]+0.15, camera.get_pos()[1], camera.get_pos()[2]);
+    }
+	if(eventPtr->get_name() == "space"){
+		cout<<"baaaaaaaaaaaaaaaaaaaaaaaaaaall" <<endl;
+		//mySound->play();
+		init_ball();
+    }
+	if(eventPtr->get_name() == "c"){
+		camera.set_pos(camera.get_pos()[0], camera.get_pos()[1], camera.get_pos()[2]+0.15);
+    }
+	if(eventPtr->get_name() == "v"){
+		camera.set_pos(camera.get_pos()[0], camera.get_pos()[1], camera.get_pos()[2]-0.15);
+    }
+	if(eventPtr->get_name() == "escape"){
+		exit(0);
+    }
 
-void inputBinding(){
-	framework.define_key("escape", "exit", Exit, 0);
-	framework.define_key("c", "camera up", moveUp, 0);
-	framework.define_key("v", "camera down", moveDown, 0);
-	framework.define_key("l", "home locator", locate, 0);
-	framework.define_key("arrow_up", "camera forward", moveForward, 0);
-	framework.define_key("arrow_down", "camera backward", moveBackward, 0);
-	framework.define_key("arrow_left", "camera left", moveLeft, 0);
-	framework.define_key("arrow_right", "camera right", moveRight, 0);
-	framework.define_key("space", "ball launch", ballLaunch, 0);
 }
-
 void debugModeHandler(const Event *eventPtr, void *dataPtr)
 {
     BulletDebugNode *debugNode = (BulletDebugNode *)dataPtr;
@@ -327,16 +388,59 @@ void debugModeHandler(const Event *eventPtr, void *dataPtr)
         debugNode->show_wireframe(show_wireframe_value);
     }
 }
- 
+void inputBinding(){
+	framework.define_key("escape", "exit", KeyboardHandler, 0);
+	framework.define_key("c", "camera up", KeyboardHandler, 0);
+	framework.define_key("v", "camera down", KeyboardHandler, 0);
+	framework.define_key("l", "home locator", KeyboardHandler, 0);
+	framework.define_key("arrow_up", "camera forward", KeyboardHandler, 0);
+	framework.define_key("arrow_down", "camera backward", KeyboardHandler, 0);
+	framework.define_key("arrow_left", "camera left", KeyboardHandler, 0);
+	framework.define_key("arrow_right", "camera right", KeyboardHandler, 0);
+	framework.define_key("space", "ball launch", KeyboardHandler, 0);
+
+}
+void init_light(){
+
+	PT(PointLight) s_light;
+	s_light = new PointLight("my s_light");
+	s_light->set_color(LVecBase4f(1.0, 1.0, 1.0, 1));
+	NodePath slnp = window->get_render().attach_new_node(s_light);
+	slnp.set_pos(5, -5, 10);
+	window->get_render().set_light(slnp);
+
+	PT(PointLight) s_light_2;
+	s_light_2 = new PointLight("my s_light");
+	s_light_2->set_color(LVecBase4f(1.0, 1.0, 1.0, 1));
+	NodePath slnp_2 = window->get_render().attach_new_node(s_light_2);
+	slnp_2.set_pos(-5, -5, 10);
+	window->get_render().set_light(slnp_2);
+
+	PT(AmbientLight) a_light;
+	a_light = new AmbientLight("my a_light");
+	a_light->set_color(LVecBase4f(0.2, 0.2, 0.2, 1));
+	NodePath alnp = window->get_render().attach_new_node(a_light);
+	window->get_render().set_light(alnp);
+}
+
 int main(int argc, char *argv[]) {
 
     framework.open_framework(argc, argv);
     framework.set_window_title("Panda3D - Assignment");
  
     window = framework.open_window();
+	PT(AudioManager) AM = AudioManager::create_AudioManager();
+	PT(AudioSound) mySound = AM->get_sound("aaa.ogg");
+	AM->set_active(true);
+
+	//mySound->set_volume(1);
+	mySound->set_loop(true);
+	cout << mySound->status() << endl;
+
+	cout << mySound->status() << endl;
  
     camera = window->get_camera_group();
-	camera.set_pos(-0,-10, 3);
+	camera.set_pos(-0,-20, 2);
 	camera.set_hpr(-0, -0, 0);
  
     physics_world = new BulletWorld () ;
@@ -354,19 +458,7 @@ int main(int argc, char *argv[]) {
     task_mgr->add(task);
     
 
-	PT(Spotlight) s_light;
-	s_light = new Spotlight("my s_light");
-	s_light->set_color(LVecBase4f(4.0, 4.0, 4.0, 1));
-	NodePath slnp = window->get_render().attach_new_node(s_light);
-	slnp.set_pos(-0, -0, 10);
-	slnp.set_hpr(-00, -90, 0);
-	window->get_render().set_light(slnp);
-
-	PT(AmbientLight) a_light;
-	a_light = new AmbientLight("my a_light");
-	a_light->set_color(LVecBase4f(0.2, 0.2, 0.2, 1));
-	NodePath alnp = window->get_render().attach_new_node(a_light);
-	window->get_render().set_light(alnp);
+	init_light();
 
 	// debug node
     PT(BulletDebugNode) bullet_dbg_node;
@@ -379,12 +471,13 @@ int main(int argc, char *argv[]) {
     np_dbg_node.show();
     physics_world->set_debug_node(bullet_dbg_node);
     // end debug node
-	
-	// debugger keys
-    framework.define_key("f1", "callChangeDebugMode", &debugModeHandler, (void *) bullet_dbg_node);
+	framework.define_key("f1", "callChangeDebugMode", &debugModeHandler, (void *) bullet_dbg_node);
     framework.define_key("f2", "callChangeDebugMode", &debugModeHandler, (void *) bullet_dbg_node);
     framework.define_key("f3", "callChangeDebugMode", &debugModeHandler, (void *) bullet_dbg_node);
     framework.define_key("f4", "callChangeDebugMode", &debugModeHandler, (void *) bullet_dbg_node);
+	
+
+	mySound->play();
 
     framework.main_loop();
     framework.close_framework();
