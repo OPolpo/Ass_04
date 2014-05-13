@@ -48,25 +48,29 @@ void init_astronaut(){
 	double height = 1;
 	double pos_x = 0;
 	double pos_y = 0;
-	double pos_z = 3;//the foot of the astronaut
+	double pos_z = 2;//the foot of the astronaut
 
 	
-	BulletBoxShape *shape1 = new BulletBoxShape(LVecBase3f(1.0,1.0,height));
+	BulletBoxShape *shape1 = new BulletBoxShape(LVecBase3f(height*0.25,height*0.20,height*0.5));//legs
+	BulletSphereShape *shape2 = new BulletSphereShape(height*0.2);//head
+	BulletBoxShape *shape3 = new BulletBoxShape(LVecBase3f(height*0.5,height*0.3,height*0.4));//body
 	BulletRigidBodyNode* astronaut_rigid_node = new BulletRigidBodyNode("Box");
 
 	astronaut_rigid_node->set_mass(0.3);
 
-	astronaut_rigid_node->add_shape(shape1, TransformState::make_pos(LPoint3f(0.0,0.0,0.0)));
+	astronaut_rigid_node->add_shape(shape1, TransformState::make_pos(LPoint3f(0.0,0.10*height,0.0)));//legs
+	astronaut_rigid_node->add_shape(shape2, TransformState::make_pos(LPoint3f(0.0,0.0,height*1.4)));//head
+	astronaut_rigid_node->add_shape(shape3, TransformState::make_pos(LPoint3f(0.0,-0.05*height,height*0.8)));//body
 
 	physics_world->attach_rigid_body(astronaut_rigid_node);
  
 	NodePath np_astronaut = window->get_render().attach_new_node(astronaut_rigid_node);
-	np_astronaut.set_pos_hpr(pos_x, pos_y , height + pos_z, 180, 0, 0);
+	np_astronaut.set_pos_hpr(pos_x, pos_y , height + pos_z, 90, 0, 0);
 
 	astronaut = window->load_model(framework.get_models(),"models/astronaut/astronaut");
 	astronaut.reparent_to(window->get_render());
 	astronaut.set_scale(0.5*height);
-	astronaut.set_pos(-0, 0, -height);
+	astronaut.set_pos(-0, 0, -height*0.50);
 	astronaut.set_hpr(0, 0, 0);
 
 	astronaut.reparent_to(np_astronaut);
@@ -78,18 +82,62 @@ void init_table(){
 	LVecBase3f normal(5 , 3 , 2);
 
 	double h = 1;
+	double p1x =  3.65*h;
+	double p1y =  0.00;
+
+	double p2x =  3.35*h;
+	double p2y =  0.90*h;
+
+	double p3x =  2.45*h;
+	double p3y =  1.75*h;
+
+	double p4x =  1.30*h;
+	double p4y =  2.30*h;
+	
+	double p5x =  0.00*h;
+	double p5y =  2.40*h;
+	
+
 
 	//BulletBoxShape *shape1 = new BulletBoxShape(LVecBase3f(4.0*h,2.5*h,0.1*h));
 	BulletConvexHullShape *shape1 = new BulletConvexHullShape();
-	shape1->add_point(LPoint3f(3.65, 0, 0));//
-	shape1->add_point(LPoint3f(3.35, 0.9, 0));
-	shape1->add_point(LPoint3f(2.45, 1.75, 0));
-	shape1->add_point(LPoint3f(1.3, 2.3, 0));
-	shape1->add_point(LPoint3f(0, 2.4, 0));//
-	shape1->add_point(LPoint3f(-3.65, 0, 0));//
-	shape1->add_point(LPoint3f(0, -2.4, 0));//
 
+	double thickness = 0.1*h;
+	shape1->add_point(LPoint3f(p1x, p1y, thickness));//
+	shape1->add_point(LPoint3f(p2x, p2y, thickness));
+	shape1->add_point(LPoint3f(p3x, p3y, thickness));
+	shape1->add_point(LPoint3f(p4x, p4y, thickness));
+	shape1->add_point(LPoint3f(p5x, p5y, thickness));//
+	shape1->add_point(LPoint3f(-p4x, p4y, thickness));
+	shape1->add_point(LPoint3f(-p3x, p3y, thickness));
+	shape1->add_point(LPoint3f(-p2x, p2y, thickness));
+	shape1->add_point(LPoint3f(-p1x, p1y, thickness));//
+	shape1->add_point(LPoint3f(-p2x, -p2y, thickness));
+	shape1->add_point(LPoint3f(-p3x, -p3y, thickness));
+	shape1->add_point(LPoint3f(-p4x, -p4y, thickness));
+	shape1->add_point(LPoint3f(-p5x, -p5y, thickness));//
+	shape1->add_point(LPoint3f(p4x, -p4y, thickness));
+	shape1->add_point(LPoint3f(p3x, -p3y, thickness));
+	shape1->add_point(LPoint3f(p2x, -p2y, thickness));
 	
+	BulletConvexHullShape *shape11 = new BulletConvexHullShape();
+	shape11->add_point(LPoint3f(p1x, p1y, 0));//
+	shape11->add_point(LPoint3f(p2x, p2y, 0));
+	shape11->add_point(LPoint3f(p3x, p3y, 0));
+	shape11->add_point(LPoint3f(p4x, p4y, 0));
+	shape11->add_point(LPoint3f(p5x, p5y, 0));//
+	shape11->add_point(LPoint3f(-p4x, p4y, 0));
+	shape11->add_point(LPoint3f(-p3x, p3y, 0));
+	shape11->add_point(LPoint3f(-p2x, p2y, 0));
+	shape11->add_point(LPoint3f(-p1x, p1y, 0));//
+	shape11->add_point(LPoint3f(-p2x, -p2y, 0));
+	shape11->add_point(LPoint3f(-p3x, -p3y, 0));
+	shape11->add_point(LPoint3f(-p4x, -p4y, 0));
+	shape11->add_point(LPoint3f(-p5x, -p5y, 0));//
+	shape11->add_point(LPoint3f(p4x, -p4y, 0));
+	shape11->add_point(LPoint3f(p3x, -p3y, 0));
+	shape11->add_point(LPoint3f(p2x, -p2y, 0));
+
 	BulletBoxShape *shape2 = new BulletBoxShape(LVecBase3f(0.2*h,0.2*h,h));
 	BulletBoxShape *shape3 = new BulletBoxShape(LVecBase3f(0.2*h,0.2*h,h));
 	BulletBoxShape *shape4 = new BulletBoxShape(LVecBase3f(0.2*h,0.2*h,h));
@@ -98,7 +146,8 @@ void init_table(){
 
 	table_rigid_node->set_mass(1.0);
 
-	table_rigid_node->add_shape(shape1, TransformState::make_pos(LPoint3f(0.0,0.0,2*h+1)));
+	table_rigid_node->add_shape(shape1, TransformState::make_pos(LPoint3f(0.0,0.0,2*h)));
+	table_rigid_node->add_shape(shape11, TransformState::make_pos(LPoint3f(0.0,0.0,2*h)));
 	table_rigid_node->add_shape(shape2, TransformState::make_pos(LPoint3f(-2.8*h,-0.9*h,h)));
 	table_rigid_node->add_shape(shape3, TransformState::make_pos(LPoint3f(-2.8*h,0.9*h,h)));
 	table_rigid_node->add_shape(shape4, TransformState::make_pos(LPoint3f(2.8*h,-0.9*h,h)));
@@ -143,12 +192,12 @@ void init_floor(){
   TextureStage* ts = new TextureStage("ts");
   ts->set_mode(TextureStage::M_modulate);
 
-  Texture* tex;
-  tex = texture_pool->load_texture("floor1.jpg");
+	Texture* tex;
+	tex = texture_pool->load_texture("floor1.jpg");
   
-  np_ground_tex.set_p(270);
-  np_ground_tex.set_tex_scale(ts, 9, 9);
-  np_ground.set_texture(ts, tex);
+	np_ground_tex.set_p(270);
+	np_ground_tex.set_tex_scale(ts, 9, 9);
+	np_ground.set_texture(ts, tex);
 	floor_rigid_node->set_friction(0.4);
 }
 
@@ -192,29 +241,27 @@ void Exit(const Event * theEvent, void * data){
 
 
 void init_ball(){
-  double radius = 0.1;
-	LVecBase3f speed(00 , 0 , -20);
+	double radius = 0.1;
+	LVecBase3f speed(00 , 60 , 0);
 	LVecBase3f ang_speed(10 , 0 , 0);
 
-  BulletSphereShape* sphere_shape = new BulletSphereShape( radius ) ;
-  BulletRigidBodyNode* sphere_rigid_node = new BulletRigidBodyNode("Sphere");
+	BulletSphereShape* sphere_shape = new BulletSphereShape( radius ) ;
+	BulletRigidBodyNode* sphere_rigid_node = new BulletRigidBodyNode("Sphere");
 
-  sphere_rigid_node->set_mass(0.02);
-  sphere_rigid_node->add_shape(sphere_shape);
- 
-  physics_world->attach_rigid_body(sphere_rigid_node);
+	sphere_rigid_node->set_mass(0.02);
+	sphere_rigid_node->add_shape(sphere_shape);
 
-  NodePath np_sphere = window->get_render().attach_new_node(sphere_rigid_node);
-  np_sphere.set_pos(camera.get_pos()[0], camera.get_pos()[1], camera.get_pos()[2]);
- 
-  //NodePath np_sphere_model = window->load_model(framework.get_models(), "smiley");
+	physics_world->attach_rigid_body(sphere_rigid_node);
+		
+	NodePath np_sphere = window->get_render().attach_new_node(sphere_rigid_node);
+	np_sphere.set_pos(camera.get_pos()[0], camera.get_pos()[1], camera.get_pos()[2]);
+
+
 	NodePath np_sphere_model = window->load_model(framework.get_models(), "models/baseball/baseball");
-  np_sphere_model.reparent_to(np_sphere);
+	np_sphere_model.reparent_to(np_sphere);
 	np_sphere_model.set_scale(radius*7);
 	sphere_rigid_node->set_linear_velocity(speed);
 	sphere_rigid_node->set_angular_velocity(ang_speed);
-	//sphere_rigid_node->set_friction(1);
-	
 }
 
 
@@ -289,8 +336,8 @@ int main(int argc, char *argv[]) {
     window = framework.open_window();
  
     camera = window->get_camera_group();
-	camera.set_pos(-0,-0, 23);
-	camera.set_hpr(-0, -90, 0);
+	camera.set_pos(-0,-10, 3);
+	camera.set_hpr(-0, -0, 0);
  
     physics_world = new BulletWorld () ;
     physics_world->set_gravity(0 , 0 , -9.8) ;
