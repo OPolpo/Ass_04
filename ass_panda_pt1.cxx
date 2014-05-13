@@ -34,113 +34,35 @@ AsyncTask::DoneStatus update_scene(GenericAsyncTask* task, void* data){
 	return	AsyncTask::DS_cont;
 }
 
-void locate(const Event * theEvent, void * data){
-	cout << "locate" <<endl;
-	//camera.set_pos(camera.get_pos()[0], camera.get_pos()[1], camera.get_pos()[2]+0.1);
-}
-void moveUp(const Event * theEvent, void * data){
-	cout << "Up" <<endl;
-	camera.set_pos(camera.get_pos()[0], camera.get_pos()[1], camera.get_pos()[2]+0.1);
-}
-void moveDown(const Event * theEvent, void * data){
-	cout<<"Down" <<endl;
-	camera.set_pos(camera.get_pos()[0], camera.get_pos()[1], camera.get_pos()[2]-0.1);
-}
-void moveForward(const Event * theEvent, void * data){
-	cout << "forward" <<endl;
-	camera.set_pos(camera.get_pos()[0], camera.get_pos()[1]+0.1, camera.get_pos()[2]);
-}
-void moveBackward(const Event * theEvent, void * data){
-	cout<<"backward" <<endl;
-	camera.set_pos(camera.get_pos()[0], camera.get_pos()[1]-0.1, camera.get_pos()[2]);
-}
-void moveLeft(const Event * theEvent, void * data){
-	cout<<"left" <<endl;
-	camera.set_pos(camera.get_pos()[0]-0.1, camera.get_pos()[1], camera.get_pos()[2]);
-}
-void moveRight(const Event * theEvent, void * data){
-	cout<<"right" <<endl;
-	camera.set_pos(camera.get_pos()[0]+0.1, camera.get_pos()[1], camera.get_pos()[2]);
-}
-void Exit(const Event * theEvent, void * data){
-	exit(0);
-}
-
-
-void init_ball(){
-  double radius = 0.1;
-	LVecBase3f speed(00 , 40 , 2);
-
-  BulletSphereShape* sphere_shape = new BulletSphereShape( radius ) ;
-  BulletRigidBodyNode* sphere_rigid_node = new BulletRigidBodyNode("Sphere");
-
-  sphere_rigid_node->set_mass(0.02);
-  sphere_rigid_node->add_shape(sphere_shape);
- 
-  physics_world->attach_rigid_body(sphere_rigid_node);
-
-  NodePath np_sphere = window->get_render().attach_new_node(sphere_rigid_node);
-  np_sphere.set_pos(camera.get_pos()[0], camera.get_pos()[1], camera.get_pos()[2]);
- 
-  NodePath np_sphere_model = window->load_model(framework.get_models(), "smiley");
-  np_sphere_model.reparent_to(np_sphere);
-	np_sphere_model.set_scale(radius);
-	sphere_rigid_node->set_linear_velocity(speed);
-}
-
-
-void ballLaunch(const Event * theEvent, void * data){
-	cout<<"baaaaaaaaaaaaaaaaaaaaaaaaaaall" <<endl;
-	init_ball();
-}
-
-void modelSetup(WindowFramework *window){
-
-	sky = window->load_model(framework.get_models(),"models/sky/blue_sky_sphere");
-	sky.reparent_to(window->get_render());
-	sky.set_scale(1);
-	sky.set_pos(0, 0, -1);
-	sky.set_hpr(0, 0, 0);
-
-	mantis = window->load_model(framework.get_models(),"models/mantis/mantis");
-	mantis.reparent_to(table);
-	mantis.set_scale(2);
-	mantis.set_pos(1.5, 0, 2);
-	mantis.set_hpr(170, 0, 0);
-
-	astronaut = window->load_model(framework.get_models(),"models/astronaut/astronaut");
-	astronaut.reparent_to(table);
-	astronaut.set_scale(0.5);
-	astronaut.set_pos(-1.5, 0, 2.7);
-	astronaut.set_hpr(190, 0, 0);
-
-
-	
-}
-
 
 void init_astronaut(){
+	
+	double height = 1;
+	double pos_x = 0;
+	double pos_y = 0;
+	double pos_z = 3;//the foot of the astronaut
 
-	BulletBoxShape *shape1 = new BulletBoxShape(LVecBase3f(1.0,1.0,4.0));
+	
+	BulletBoxShape *shape1 = new BulletBoxShape(LVecBase3f(1.0,1.0,height));
 	BulletRigidBodyNode* astronaut_rigid_node = new BulletRigidBodyNode("Box");
 
-	astronaut_rigid_node->set_mass(0.1);
+	astronaut_rigid_node->set_mass(0.3);
 
 	astronaut_rigid_node->add_shape(shape1, TransformState::make_pos(LPoint3f(0.0,0.0,0.0)));
 
 	physics_world->attach_rigid_body(astronaut_rigid_node);
  
 	NodePath np_astronaut = window->get_render().attach_new_node(astronaut_rigid_node);
-	np_astronaut.set_pos_hpr(0, -5, 6, 180, 0, 0);
+	np_astronaut.set_pos_hpr(pos_x, pos_y , height + pos_z, 180, 0, 0);
 
 	astronaut = window->load_model(framework.get_models(),"models/astronaut/astronaut");
-	//astronaut = window->load_model(framework.get_models(),"models/misc/rgbCube");	
 	astronaut.reparent_to(window->get_render());
-	astronaut.set_scale(2.0);
-	astronaut.set_pos(-0, 0, -4);
+	astronaut.set_scale(0.5*height);
+	astronaut.set_pos(-0, 0, -height);
 	astronaut.set_hpr(0, 0, 0);
 
 	astronaut.reparent_to(np_astronaut);
+	astronaut_rigid_node->set_friction(0.6);
 	
 }
 
@@ -208,6 +130,94 @@ void init_floor(){
   np_ground_tex.set_p(270);
   np_ground_tex.set_tex_scale(ts, 9, 9);
   np_ground.set_texture(ts, tex);
+	floor_rigid_node->set_friction(0.4);
+}
+
+void locate_models(){
+	init_floor();
+	init_astronaut();
+	init_table();
+}
+void locate(const Event * theEvent, void * data){
+	cout << "locate" <<endl;
+	locate_models();
+	//camera.set_pos(camera.get_pos()[0], camera.get_pos()[1], camera.get_pos()[2]+0.1);
+}
+void moveUp(const Event * theEvent, void * data){
+	cout << "Up" <<endl;
+	camera.set_pos(camera.get_pos()[0], camera.get_pos()[1], camera.get_pos()[2]+0.1);
+}
+void moveDown(const Event * theEvent, void * data){
+	cout<<"Down" <<endl;
+	camera.set_pos(camera.get_pos()[0], camera.get_pos()[1], camera.get_pos()[2]-0.1);
+}
+void moveForward(const Event * theEvent, void * data){
+	cout << "forward" <<endl;
+	camera.set_pos(camera.get_pos()[0], camera.get_pos()[1]+0.1, camera.get_pos()[2]);
+}
+void moveBackward(const Event * theEvent, void * data){
+	cout<<"backward" <<endl;
+	camera.set_pos(camera.get_pos()[0], camera.get_pos()[1]-0.1, camera.get_pos()[2]);
+}
+void moveLeft(const Event * theEvent, void * data){
+	cout<<"left" <<endl;
+	camera.set_pos(camera.get_pos()[0]-0.1, camera.get_pos()[1], camera.get_pos()[2]);
+}
+void moveRight(const Event * theEvent, void * data){
+	cout<<"right" <<endl;
+	camera.set_pos(camera.get_pos()[0]+0.1, camera.get_pos()[1], camera.get_pos()[2]);
+}
+void Exit(const Event * theEvent, void * data){
+	exit(0);
+}
+
+
+void init_ball(){
+  double radius = 0.1;
+	LVecBase3f speed(00 , 60 , 00);
+	LVecBase3f ang_speed(10 , 0 , 0);
+
+  BulletSphereShape* sphere_shape = new BulletSphereShape( radius ) ;
+  BulletRigidBodyNode* sphere_rigid_node = new BulletRigidBodyNode("Sphere");
+
+  sphere_rigid_node->set_mass(0.02);
+  sphere_rigid_node->add_shape(sphere_shape);
+ 
+  physics_world->attach_rigid_body(sphere_rigid_node);
+
+  NodePath np_sphere = window->get_render().attach_new_node(sphere_rigid_node);
+  np_sphere.set_pos(camera.get_pos()[0], camera.get_pos()[1], camera.get_pos()[2]);
+ 
+  //NodePath np_sphere_model = window->load_model(framework.get_models(), "smiley");
+	NodePath np_sphere_model = window->load_model(framework.get_models(), "models/baseball/baseball");
+  np_sphere_model.reparent_to(np_sphere);
+	np_sphere_model.set_scale(radius*7);
+	sphere_rigid_node->set_linear_velocity(speed);
+	sphere_rigid_node->set_angular_velocity(ang_speed);
+	//sphere_rigid_node->set_friction(1);
+	
+}
+
+
+void ballLaunch(const Event * theEvent, void * data){
+	cout<<"baaaaaaaaaaaaaaaaaaaaaaaaaaall" <<endl;
+	init_ball();
+}
+
+void modelSetup(WindowFramework *window){
+
+	sky = window->load_model(framework.get_models(),"models/sky/blue_sky_sphere");
+	sky.reparent_to(window->get_render());
+	sky.set_scale(1);
+	sky.set_pos(0, 0, -1);
+	sky.set_hpr(0, 0, 0);
+
+	mantis = window->load_model(framework.get_models(),"models/mantis/mantis");
+	mantis.reparent_to(table);
+	mantis.set_scale(2);
+	mantis.set_pos(1.5, 0, 2);
+	mantis.set_hpr(170, 0, 0);
+	
 }
 
 
@@ -232,7 +242,7 @@ int main(int argc, char *argv[]) {
     window = framework.open_window();
  
     camera = window->get_camera_group();
-	camera.set_pos(-0,-10, 0);
+	camera.set_pos(-0,-10, 3);
 	camera.set_hpr(-0, -0, 0);
  
     physics_world = new BulletWorld () ;
@@ -243,10 +253,7 @@ int main(int argc, char *argv[]) {
 	inputBinding();
 	modelSetup(window);
 
-    init_floor();
-    //init_ball();
-	init_astronaut();
-	init_table();
+   	locate_models();
 
     PT(GenericAsyncTask) task;
     task = new GenericAsyncTask("Scene update" , &update_scene , (void *) NULL );
