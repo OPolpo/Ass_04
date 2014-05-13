@@ -13,6 +13,12 @@
 #include "texturePool.h"
 #include "textureStage.h"
 
+
+#include "ambientLight.h"
+#include "directionalLight.h"
+#include "pointLight.h"
+#include "spotlight.h"
+
 // Global stuff
 PandaFramework framework;
 WindowFramework *window;
@@ -259,7 +265,21 @@ int main(int argc, char *argv[]) {
     task = new GenericAsyncTask("Scene update" , &update_scene , (void *) NULL );
     task_mgr->add(task);
     
- 
+
+	PT(Spotlight) s_light;
+	s_light = new Spotlight("my s_light");
+	s_light->set_color(LVecBase4f(4.0, 4.0, 4.0, 1));
+	NodePath slnp = window->get_render().attach_new_node(s_light);
+	slnp.set_pos(-0, -0, 10);
+	slnp.set_hpr(-00, -90, 0);
+	window->get_render().set_light(slnp);
+
+	PT(AmbientLight) a_light;
+	a_light = new AmbientLight("my a_light");
+	a_light->set_color(LVecBase4f(0.2, 0.2, 0.2, 1));
+	NodePath alnp = window->get_render().attach_new_node(a_light);
+	window->get_render().set_light(alnp);
+
     framework.main_loop();
     framework.close_framework();
  
