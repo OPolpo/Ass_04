@@ -15,9 +15,9 @@
 #include "texturePool.h"
 #include "textureStage.h"
 #include "material.h"
+
+#include "pandaSystem.h"
 #include "audioManager.h"
-#include "audio.h"
-#include "audioSound.h"
 
 #include "ambientLight.h"
 #include "directionalLight.h"
@@ -30,8 +30,9 @@ WindowFramework *window;
 AsyncTaskManager *task_mgr = AsyncTaskManager::get_global_ptr();
 PT(ClockObject) globalClock = ClockObject::get_global_clock();
 NodePath camera;
-NodePath ground, table, rolling_pin, lunch_box, astronaut, sky;
-
+NodePath table, rolling_pin, lunch_box, astronaut, sky;
+PT(AudioManager) AM;
+PT(AudioSound) mySound;
 
 
 BulletWorld *physics_world;
@@ -39,58 +40,71 @@ BulletWorld *physics_world;
 ClockObject *co = ClockObject::get_global_clock();
 TexturePool *texture_pool = TexturePool::get_global_ptr();
 
- 
+double astronaut_height = 1;
+double astronaut_pos_x = 0;
+double astronaut_pos_y = 0;
+double astronaut_pos_z = 2.7;//the foot of the astronaut
+
+double rolling_pin_length = 2;
+double rolling_pin_pos_x = 3;
+double rolling_pin_pos_y = 0;
+double rolling_pin_pos_z = 2.5;
+
+double table_height=1.5;
+
+double lunch_box_length = 0.8;
+double lunch_box_pos_x = -3;
+double lunch_box_pos_y = 0;
+double lunch_box_pos_z = 3.5;
+
+void locate(){
+	table.set_pos_hpr(0,0,0,0,0,0);
+	lunch_box.set_pos_hpr(lunch_box_pos_x, lunch_box_pos_y , lunch_box_length + lunch_box_pos_z, 45, 0, 0);
+	astronaut.set_pos_hpr(astronaut_pos_x, astronaut_pos_y , astronaut_height + astronaut_pos_z, 180, 0, 0);
+	rolling_pin.set_pos_hpr(rolling_pin_pos_x, rolling_pin_pos_y , rolling_pin_length + rolling_pin_pos_z, 45, 90, 0);
+}
+
+
 AsyncTask::DoneStatus update_scene(GenericAsyncTask* task, void* data){
 	ClockObject *co = ClockObject::get_global_clock();
 	physics_world ->do_physics(co->get_dt(), 10, 1.0 / 180.0);
+	
 	return	AsyncTask::DS_cont;
 }
 
 
 void init_astronaut(){
 	
-	double height = 1;
-	double pos_x = 0;
-	double pos_y = 0;
-	double pos_z = 2.7;//the foot of the astronaut
-
-	
-	BulletBoxShape *shape1 = new BulletBoxShape(LVecBase3f(height*0.25,height*0.20,height*0.5));//legs
-	BulletSphereShape *shape2 = new BulletSphereShape(height*0.2);//head
-	BulletBoxShape *shape3 = new BulletBoxShape(LVecBase3f(height*0.5,height*0.3,height*0.4));//body
+	BulletBoxShape *shape1 = new BulletBoxShape(LVecBase3f(astronaut_height*0.25,astronaut_height*0.20,astronaut_height*0.5));//legs
+	BulletSphereShape *shape2 = new BulletSphereShape(astronaut_height*0.2);//head
+	BulletBoxShape *shape3 = new BulletBoxShape(LVecBase3f(astronaut_height*0.5,astronaut_height*0.3,astronaut_height*0.4));//body
 	BulletRigidBodyNode* astronaut_rigid_node = new BulletRigidBodyNode("Box");
 
 	astronaut_rigid_node->set_mass(0.3);
 
-	astronaut_rigid_node->add_shape(shape1, TransformState::make_pos(LPoint3f(0.0,0.10*height,0.0)));//legs
-	astronaut_rigid_node->add_shape(shape2, TransformState::make_pos(LPoint3f(0.0,0.0,height*1.4)));//head
-	astronaut_rigid_node->add_shape(shape3, TransformState::make_pos(LPoint3f(0.0,-0.05*height,height*0.8)));//body
+	astronaut_rigid_node->add_shape(shape1, TransformState::make_pos(LPoint3f(0.0,0.10*astronaut_height,0.0)));//legs
+	astronaut_rigid_node->add_shape(shape2, TransformState::make_pos(LPoint3f(0.0,0.0,astronaut_height*1.4)));//head
+	astronaut_rigid_node->add_shape(shape3, TransformState::make_pos(LPoint3f(0.0,-0.05*astronaut_height,astronaut_height*0.8)));//body
 
 	physics_world->attach_rigid_body(astronaut_rigid_node);
  
-	NodePath np_astronaut = window->get_render().attach_new_node(astronaut_rigid_node);
-	np_astronaut.set_pos_hpr(pos_x, pos_y , height + pos_z, 180, 0, 0);
+	astronaut = window->get_render().attach_new_node(astronaut_rigid_node);
+	astronaut.set_pos_hpr(astronaut_pos_x, astronaut_pos_y , astronaut_height + astronaut_pos_z, 180, 0, 0);
 
-	astronaut = window->load_model(framework.get_models(),"models/astronaut/astronaut");
-	astronaut.reparent_to(window->get_render());
-	astronaut.set_scale(0.5*height);
-	astronaut.set_pos(-0, 0, -height*0.50);
-	astronaut.set_hpr(0, 0, 0);
+	NodePath astronaut_model = window->load_model(framework.get_models(),"models/astronaut/astronaut");
+	astronaut_model.reparent_to(window->get_render());
+	astronaut_model.set_scale(0.5*astronaut_height);
+	astronaut_model.set_pos(-0, 0, -astronaut_height*0.50);
+	astronaut_model.set_hpr(0, 0, 0);
 
-	astronaut.reparent_to(np_astronaut);
+	astronaut_model.reparent_to(astronaut);
 	astronaut_rigid_node->set_friction(0.6);
 	
 }
 
 void init_rolling_pin(){
 	
-	double length = 2;
-	double pos_x = 3;
-	double pos_y = 0;
-	double pos_z = 2.5;
-
-	
-	BulletCylinderShape *shape1 = new BulletCylinderShape(0.1*length,length);
+	BulletCylinderShape *shape1 = new BulletCylinderShape(0.1*rolling_pin_length,rolling_pin_length);
 	BulletRigidBodyNode* rolling_pin_rigid_node = new BulletRigidBodyNode("Box");
 
 	rolling_pin_rigid_node->set_mass(0.3);
@@ -100,30 +114,24 @@ void init_rolling_pin(){
 
 	physics_world->attach_rigid_body(rolling_pin_rigid_node);
  
-	NodePath np_rolling_pin = window->get_render().attach_new_node(rolling_pin_rigid_node);
-	np_rolling_pin.set_pos_hpr(pos_x, pos_y , length + pos_z, 45, 90, 0);
+	rolling_pin = window->get_render().attach_new_node(rolling_pin_rigid_node);
+	rolling_pin.set_pos_hpr(rolling_pin_pos_x, rolling_pin_pos_y , rolling_pin_length + rolling_pin_pos_z, 45, 90, 0);
 
-	rolling_pin = window->load_model(framework.get_models(),"models/rolling/RollingPin");
-	rolling_pin.reparent_to(window->get_render());
-	rolling_pin.set_scale(length);
-	rolling_pin.set_pos(0, 0, 0);
-	rolling_pin.set_hpr(0, 0, 90);
+	NodePath rolling_pin_model = window->load_model(framework.get_models(),"models/rolling/RollingPin");
+	rolling_pin_model.reparent_to(window->get_render());
+	rolling_pin_model.set_scale(rolling_pin_length);
+	rolling_pin_model.set_pos(0, 0, 0);
+	rolling_pin_model.set_hpr(0, 0, 90);
 
-	rolling_pin.reparent_to(np_rolling_pin);
+	rolling_pin_model.reparent_to(rolling_pin);
 	rolling_pin_rigid_node->set_friction(0.6);
 	rolling_pin_rigid_node->set_anisotropic_friction(0.8);
 	
 }
 
 void init_lunch_box(){
-	
-	double length = 0.8;
-	double pos_x = -3;
-	double pos_y = 0;
-	double pos_z = 3.5;
 
-	
-	BulletBoxShape *shape1 = new BulletBoxShape(LVecBase3f(length*1.1,length*0.5,length*1.2));
+	BulletBoxShape *shape1 = new BulletBoxShape(LVecBase3f(lunch_box_length*1.1,lunch_box_length*0.5,lunch_box_length*1.2));
 	BulletRigidBodyNode* lunch_box_rigid_node = new BulletRigidBodyNode("Box");
 
 	lunch_box_rigid_node->set_mass(0.3);
@@ -133,16 +141,16 @@ void init_lunch_box(){
 
 	physics_world->attach_rigid_body(lunch_box_rigid_node);
  
-	NodePath np_lunch_box = window->get_render().attach_new_node(lunch_box_rigid_node);
-	np_lunch_box.set_pos_hpr(pos_x, pos_y , length + pos_z, 45, 0, 0);
+	lunch_box = window->get_render().attach_new_node(lunch_box_rigid_node);
+	lunch_box.set_pos_hpr(lunch_box_pos_x, lunch_box_pos_y , lunch_box_length + lunch_box_pos_z, 45, 0, 0);
 
-	lunch_box = window->load_model(framework.get_models(),"models/lunchBox/LunchBox");
-	lunch_box.reparent_to(window->get_render());
-	lunch_box.set_scale(length*3);
-	lunch_box.set_pos(0, 0, 0);
-	lunch_box.set_hpr(0, 0, 90);
+	NodePath lunch_box_model = window->load_model(framework.get_models(),"models/lunchBox/LunchBox");
+	lunch_box_model.reparent_to(window->get_render());
+	lunch_box_model.set_scale(lunch_box_length*3);
+	lunch_box_model.set_pos(0, 0, 0);
+	lunch_box_model.set_hpr(0, 0, 90);
 
-	lunch_box.reparent_to(np_lunch_box);
+	lunch_box_model.reparent_to(lunch_box);
 	lunch_box_rigid_node->set_friction(0.6);
 	lunch_box_rigid_node->set_anisotropic_friction(0.8);
 	
@@ -151,7 +159,7 @@ void init_lunch_box(){
 void init_table(){
 	LVecBase3f normal(5 , 3 , 2);
 
-	double h = 1.5;
+	double h = table_height;
 	double p1x =  3.65*h;
 	double p1y =  0.00;
 
@@ -214,7 +222,6 @@ void init_table(){
 	table_rigid_node->set_mass(1.0);
 
 	table_rigid_node->add_shape(shape1, TransformState::make_pos(LPoint3f(0.0,0.0,2*h)));
-	//table_rigid_node->add_shape(shape11, TransformState::make_pos(LPoint3f(0.0,0.0,2*h)));
 	table_rigid_node->add_shape(shape2, TransformState::make_pos(LPoint3f(-2.8*h,-0.9*h,h)));
 	table_rigid_node->add_shape(shape3, TransformState::make_pos(LPoint3f(-2.8*h,0.9*h,h)));
 	table_rigid_node->add_shape(shape4, TransformState::make_pos(LPoint3f(2.8*h,-0.9*h,h)));
@@ -222,21 +229,17 @@ void init_table(){
 
 	physics_world->attach_rigid_body(table_rigid_node);
  
-	NodePath np_table = window->get_render().attach_new_node(table_rigid_node);
-	np_table.set_pos_hpr(0, 0, 0, 0, 0, 0);
+	table = window->get_render().attach_new_node(table_rigid_node);
+	table.set_pos_hpr(0, 0, 0, 0, 0, 0);
 
 
-	table = window->load_model(framework.get_models(),"models/dining_table_2/DiningTable2");
-	table.reparent_to(window->get_render());
-	table.set_scale(0.77*h);
-	//table.set_scale(0.01);
-	table.set_pos(0, 0, 0);
+	NodePath table_model = window->load_model(framework.get_models(),"models/dining_table_2/DiningTable2");
+	table_model.reparent_to(window->get_render());
+	table_model.set_scale(0.77*h);
+	table_model.set_pos(0, 0, 0);
 	table.set_hpr(0, 0, 0);
     
-  table.reparent_to(np_table);
-	PT(Material) table_material = new Material("table");
-	table_material->set_diffuse(LVecBase4(0.5,0.5,0.5,0.5));
-	table.set_material(table_material);
+	table_model.reparent_to(table);
 	
 }
 
@@ -255,7 +258,7 @@ void init_floor(){
 
   CardMaker* cm = new CardMaker("ground");
   cm->set_frame(-60, 60, -60, 60);
-    
+
   NodePath np_ground_tex = window->get_render().attach_new_node(cm->generate());
   np_ground_tex.reparent_to(np_ground);
   
@@ -276,18 +279,14 @@ void init_floor(){
 	
 }
 
-void locate_models(){
+void init_models(){
 	init_floor();
 	init_astronaut();
 	init_table();
 	init_rolling_pin();
 	init_lunch_box();
 }
-void locate(const Event * theEvent, void * data){
-	cout << "locate" <<endl;
-	locate_models();
-	//camera.set_pos(camera.get_pos()[0], camera.get_pos()[1], camera.get_pos()[2]+0.1);
-}
+
 
 void Exit(const Event * theEvent, void * data){
 	exit(0);
@@ -320,14 +319,12 @@ void init_ball(){
 
 
 
-void modelSetup(WindowFramework *window){
-
+void init_sky(){
 	sky = window->load_model(framework.get_models(),"models/sky/blue_sky_sphere");
 	sky.reparent_to(window->get_render());
 	sky.set_scale(1);
 	sky.set_pos(0, 0, -1);
 	sky.set_hpr(0, 0, 0);
-	
 }
 
 void KeyboardHandler(const Event *eventPtr, void *dataPtr)
@@ -345,8 +342,7 @@ void KeyboardHandler(const Event *eventPtr, void *dataPtr)
 		camera.set_pos(camera.get_pos()[0]+0.15, camera.get_pos()[1], camera.get_pos()[2]);
     }
 	if(eventPtr->get_name() == "space"){
-		cout<<"baaaaaaaaaaaaaaaaaaaaaaaaaaall" <<endl;
-		//mySound->play();
+		mySound->play();
 		init_ball();
     }
 	if(eventPtr->get_name() == "c"){
@@ -358,7 +354,10 @@ void KeyboardHandler(const Event *eventPtr, void *dataPtr)
 	if(eventPtr->get_name() == "escape"){
 		exit(0);
     }
-
+	if(eventPtr->get_name() == "r"){
+		cout << "locate" << endl;
+		locate();
+	}
 }
 void debugModeHandler(const Event *eventPtr, void *dataPtr)
 {
@@ -392,7 +391,7 @@ void inputBinding(){
 	framework.define_key("escape", "exit", KeyboardHandler, 0);
 	framework.define_key("c", "camera up", KeyboardHandler, 0);
 	framework.define_key("v", "camera down", KeyboardHandler, 0);
-	framework.define_key("l", "home locator", KeyboardHandler, 0);
+	framework.define_key("r", "home locator", KeyboardHandler, 0);
 	framework.define_key("arrow_up", "camera forward", KeyboardHandler, 0);
 	framework.define_key("arrow_down", "camera backward", KeyboardHandler, 0);
 	framework.define_key("arrow_left", "camera left", KeyboardHandler, 0);
@@ -424,21 +423,17 @@ void init_light(){
 }
 
 int main(int argc, char *argv[]) {
+	
+	AM = AudioManager::create_AudioManager();
+	mySound = AM->get_sound("/home/polpo/Desktop/ass_panda/aaa.ogg");
+	AM->set_active(true);
+	mySound->set_loop(true);
 
     framework.open_framework(argc, argv);
     framework.set_window_title("Panda3D - Assignment");
  
     window = framework.open_window();
-	PT(AudioManager) AM = AudioManager::create_AudioManager();
-	PT(AudioSound) mySound = AM->get_sound("aaa.ogg");
-	AM->set_active(true);
 
-	//mySound->set_volume(1);
-	mySound->set_loop(true);
-	cout << mySound->status() << endl;
-
-	cout << mySound->status() << endl;
- 
     camera = window->get_camera_group();
 	camera.set_pos(-0,-20, 2);
 	camera.set_hpr(-0, -0, 0);
@@ -449,14 +444,13 @@ int main(int argc, char *argv[]) {
 	
 	window->enable_keyboard();	
 	inputBinding();
-	modelSetup(window);
+	init_sky();
 
-   	locate_models();
+   	init_models();
 
     PT(GenericAsyncTask) task;
     task = new GenericAsyncTask("Scene update" , &update_scene , (void *) NULL );
     task_mgr->add(task);
-    
 
 	init_light();
 
@@ -476,8 +470,6 @@ int main(int argc, char *argv[]) {
     framework.define_key("f3", "callChangeDebugMode", &debugModeHandler, (void *) bullet_dbg_node);
     framework.define_key("f4", "callChangeDebugMode", &debugModeHandler, (void *) bullet_dbg_node);
 	
-
-	mySound->play();
 
     framework.main_loop();
     framework.close_framework();
