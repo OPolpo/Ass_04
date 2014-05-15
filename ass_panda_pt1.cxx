@@ -329,31 +329,43 @@ void init_sky(){
 
 void KeyboardHandler(const Event *eventPtr, void *dataPtr)
 {
-    if(eventPtr->get_name() == "arrow_up"){
+    if(eventPtr->get_name() == "arrow_up")
+		camera.set_pos(camera.get_hpr()[0], camera.get_hpr()[1]+0.15, camera.get_hpr()[2]);
+
+    if(eventPtr->get_name() == "arrow_down")
+		camera.set_pos(camera.get_hpr()[0], camera.get_hpr()[1]-0.15, camera.get_hpr()[2]);
+
+    if(eventPtr->get_name() == "arrow_left")
+		camera.set_pos(camera.get_hpr()[0]-0.15, camera.get_hpr()[1], camera.get_hpr()[2]);
+
+	if(eventPtr->get_name() == "arrow_right")
+		camera.set_pos(camera.get_hpr()[0]+0.15, camera.get_hpr()[1], camera.get_hpr()[2]);
+
+    if(eventPtr->get_name() == "w")
 		camera.set_pos(camera.get_pos()[0], camera.get_pos()[1]+0.15, camera.get_pos()[2]);
-    }
-    if(eventPtr->get_name() == "arrow_down"){
+
+    if(eventPtr->get_name() == "s")
 		camera.set_pos(camera.get_pos()[0], camera.get_pos()[1]-0.15, camera.get_pos()[2]);
-    }
-    if(eventPtr->get_name() == "arrow_left"){
+
+    if(eventPtr->get_name() == "a")
 		camera.set_pos(camera.get_pos()[0]-0.15, camera.get_pos()[1], camera.get_pos()[2]);
-    }
-	if(eventPtr->get_name() == "arrow_right"){
+
+	if(eventPtr->get_name() == "d")
 		camera.set_pos(camera.get_pos()[0]+0.15, camera.get_pos()[1], camera.get_pos()[2]);
-    }
+
 	if(eventPtr->get_name() == "space"){
 		mySound->play();
 		init_ball();
     }
-	if(eventPtr->get_name() == "c"){
+	if(eventPtr->get_name() == "c")
 		camera.set_pos(camera.get_pos()[0], camera.get_pos()[1], camera.get_pos()[2]+0.15);
-    }
+
 	if(eventPtr->get_name() == "v"){
 		camera.set_pos(camera.get_pos()[0], camera.get_pos()[1], camera.get_pos()[2]-0.15);
     }
-	if(eventPtr->get_name() == "escape"){
+	if(eventPtr->get_name() == "escape")
 		exit(0);
-    }
+
 	if(eventPtr->get_name() == "r"){
 		cout << "locate" << endl;
 		locate();
